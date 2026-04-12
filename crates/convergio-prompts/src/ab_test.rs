@@ -11,7 +11,7 @@ pub fn create_test(
     prompt_b_id: &str,
     task_ref: &str,
 ) -> rusqlite::Result<String> {
-    let test_id = format!("ab-{}", uuid_short());
+    let test_id = format!("ab-{}", new_id());
     conn.execute(
         "INSERT INTO prompt_ab_tests (test_id, prompt_a_id, prompt_b_id, task_ref)
          VALUES (?1, ?2, ?3, ?4)",
@@ -48,8 +48,13 @@ pub fn record_variant_b(
     Ok(())
 }
 
-/// Declare a winner for the test.
+/// Declare a winner for the test. Winner must be "A" or "B".
 pub fn declare_winner(conn: &Connection, test_id: &str, winner: &str) -> rusqlite::Result<()> {
+    if winner != "A" && winner != "B" {
+        return Err(rusqlite::Error::InvalidParameterName(
+            "winner must be 'A' or 'B'".into(),
+        ));
+    }
     conn.execute(
         "UPDATE prompt_ab_tests SET winner = ?1 WHERE test_id = ?2",
         params![winner, test_id],
@@ -97,8 +102,8 @@ fn row_to_ab_result(row: &rusqlite::Row) -> rusqlite::Result<AbTestResult> {
     })
 }
 
-fn uuid_short() -> String {
-    uuid::Uuid::new_v4().to_string()[..8].to_string()
+fn new_id() -> String {
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]
@@ -130,9 +135,9 @@ mod tests {
         let tid = create_test(&conn, "pa", "pb", "task-42").unwrap();
         record_variant_a(&conn, &tid, 500, 0.85).unwrap();
         record_variant_b(&conn, &tid, 350, 0.90).unwrap();
-        declare_winner(&conn, &tid, "pb").unwrap();
+        declare_winner(&conn, &tid, "B").unwrap();
         let result = get_test(&conn, &tid).unwrap();
-        assert_eq!(result.winner.as_deref(), Some("pb"));
+        assert_eq!(result.winner.as_deref(), Some("B"));
         assert_eq!(result.tokens_a, 500);
         assert_eq!(result.tokens_b, 350);
     }

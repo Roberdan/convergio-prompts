@@ -6,7 +6,7 @@ use crate::types::{PromptInput, PromptQuery, PromptTemplate, PromptVariable};
 
 /// Create a new prompt template, returning its ID.
 pub fn create_prompt(conn: &Connection, input: &PromptInput) -> rusqlite::Result<String> {
-    let id = format!("pt-{}", &uuid_short());
+    let id = format!("pt-{}", new_id());
     let vars_json = serde_json::to_string(&input.variables).unwrap_or_default();
     let next_version = next_version_for(conn, &input.name)?;
 
@@ -116,8 +116,8 @@ fn row_to_prompt(row: &rusqlite::Row) -> rusqlite::Result<PromptTemplate> {
     })
 }
 
-fn uuid_short() -> String {
-    uuid::Uuid::new_v4().to_string()[..8].to_string()
+fn new_id() -> String {
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]

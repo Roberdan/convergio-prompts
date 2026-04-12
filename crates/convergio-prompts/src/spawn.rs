@@ -27,7 +27,7 @@ pub fn inject_at_spawn(
         .map_err(|e| format!("prompt not found: {e}"))?;
 
     let rendered = render::render(&template.body, &template.variables, values)?;
-    let spawn_id = format!("sp-{}", uuid_short());
+    let spawn_id = format!("sp-{}", new_id());
 
     conn.execute(
         "INSERT INTO prompt_spawned (spawn_id, agent, task_id, rendered_body, prompt_template_id, prompt_version)
@@ -98,8 +98,8 @@ pub fn get_spawned_for_task(
     rows.collect()
 }
 
-fn uuid_short() -> String {
-    uuid::Uuid::new_v4().to_string()[..8].to_string()
+fn new_id() -> String {
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]
