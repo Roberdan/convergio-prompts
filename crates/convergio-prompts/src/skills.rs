@@ -6,7 +6,7 @@ use crate::types::{Skill, SkillInput, SkillQuery};
 
 /// Register or update a skill for an agent.
 pub fn register_skill(conn: &Connection, input: &SkillInput) -> rusqlite::Result<String> {
-    let id = format!("sk-{}", &uuid_short());
+    let id = format!("sk-{}", new_id());
     conn.execute(
         "INSERT INTO prompt_skills (id, agent, host, capability, confidence, description)
          VALUES (?1, ?2, ?3, ?4, ?5, ?6)
@@ -106,6 +106,7 @@ pub fn update_confidence(
     capability: &str,
     rating: f64,
 ) -> rusqlite::Result<()> {
+    let rating = rating.clamp(0.0, 1.0);
     let current: f64 = conn
         .query_row(
             "SELECT confidence FROM prompt_skills WHERE agent=?1 AND host=?2 AND capability=?3",
@@ -113,7 +114,7 @@ pub fn update_confidence(
             |r| r.get(0),
         )
         .unwrap_or(0.5);
-    let updated = current * 0.8 + rating * 0.2;
+    let updated = (current * 0.8 + rating * 0.2).clamp(0.0, 1.0);
     conn.execute(
         "UPDATE prompt_skills SET confidence = ?1 WHERE agent=?2 AND host=?3 AND capability=?4",
         params![updated, agent, host, capability],
@@ -134,8 +135,8 @@ fn row_to_skill(row: &rusqlite::Row) -> rusqlite::Result<Skill> {
     })
 }
 
-fn uuid_short() -> String {
-    uuid::Uuid::new_v4().to_string()[..8].to_string()
+fn new_id() -> String {
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]

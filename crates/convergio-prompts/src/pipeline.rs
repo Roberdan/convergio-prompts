@@ -6,7 +6,7 @@ use crate::types::{PipelineDefinition, PipelineInput, PipelineStep};
 
 /// Create a new pipeline, returning its ID.
 pub fn create_pipeline(conn: &Connection, input: &PipelineInput) -> rusqlite::Result<String> {
-    let id = format!("pl-{}", &uuid_short());
+    let id = format!("pl-{}", new_id());
     let steps_json = serde_json::to_string(&input.steps).unwrap_or_default();
     conn.execute(
         "INSERT INTO prompt_pipelines (id, name, description, steps_json, active)
@@ -59,8 +59,8 @@ fn row_to_pipeline(row: &rusqlite::Row) -> rusqlite::Result<PipelineDefinition> 
     })
 }
 
-fn uuid_short() -> String {
-    uuid::Uuid::new_v4().to_string()[..8].to_string()
+fn new_id() -> String {
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]

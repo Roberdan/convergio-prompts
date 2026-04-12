@@ -147,10 +147,10 @@ fn ab_test_lifecycle() {
     let tid = ab_test::create_test(&conn, "pa", "pb", "task-e2e").unwrap();
     ab_test::record_variant_a(&conn, &tid, 400, 0.80).unwrap();
     ab_test::record_variant_b(&conn, &tid, 300, 0.92).unwrap();
-    ab_test::declare_winner(&conn, &tid, "pb").unwrap();
+    ab_test::declare_winner(&conn, &tid, "B").unwrap();
 
     let result = ab_test::get_test(&conn, &tid).unwrap();
-    assert_eq!(result.winner.as_deref(), Some("pb"));
+    assert_eq!(result.winner.as_deref(), Some("B"));
     assert_eq!(result.tokens_a, 400);
     assert!((result.score_b - 0.92).abs() < 0.001);
 }
